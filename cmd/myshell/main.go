@@ -76,7 +76,7 @@ func echo(args []string) {
 }
 
 func typer(args []string) {
-	cmd, args, builtin := getCommand(args)
+	cmd, _, builtin := getCommand(args)
 	if builtin {
 		fmt.Printf("%s is a shell builtin\n", cmd)
 		return
@@ -85,7 +85,11 @@ func typer(args []string) {
 		fmt.Println(cmd)
 		return
 	}
-	fmt.Printf("%s: not found\n", args[0])
+	if len(args) != 0 {
+		fmt.Printf("%s: not found\n", args[0])
+		return
+	}
+	fmt.Printf("%s: not found\n", cmd)
 }
 
 func getCommand(args []string) (string, []string, bool) {
