@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"fmt"
+	"log"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -58,6 +59,7 @@ func initCommands() {
 	registerCommand("exit", exit)
 	registerCommand("echo", echo)
 	registerCommand("type", typer)
+	registerCommand("pwd", pwd)
 }
 
 func notFound(cmd string) {
@@ -90,6 +92,14 @@ func typer(args []string) {
 		return
 	}
 	fmt.Printf("%s: not found\n", cmd)
+}
+
+func pwd(args []string) {
+	path, err := os.Getwd()
+	if err != nil {
+		log.Println(err)
+	}
+	fmt.Println(path)
 }
 
 func getCommand(args []string) (string, []string, bool) {
