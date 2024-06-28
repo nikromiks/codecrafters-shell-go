@@ -4,40 +4,81 @@ import (
 	"bufio"
 	"fmt"
 	"os"
+	"path/filepath"
+	"strconv"
 	"strings"
 )
 
-var commands = map[string]string{
-	"exit": "exit",
-	"echo": "echo",
-	"type": "type",
-}
+type (
+	cmdFnc func([]string)
+)
+
+var commands = make(map[string]cmdFnc)
 
 func main() {
+	initCommands()
 	for {
 		fmt.Fprint(os.Stdout, "$ ")
-
 		// Wait for user input
-		input, _ := bufio.NewReader(os.Stdin).ReadString('\n')
-
-		switch true {
-		case strings.HasPrefix(strings.ToLower(input), "exit"):
-			os.Exit(0)
-
-		case strings.HasPrefix(strings.ToLower(input), "echo"):
-			fmt.Fprint(os.Stdout, strings.TrimPrefix(input, "echo "))
-
-		case strings.HasPrefix(strings.ToLower(input), "type"):
-			rest := strings.TrimPrefix(input, "type")
-			rest = strings.Trim(rest, "\n ")
-			if _, ok := commands[rest]; !ok {
-				fmt.Fprintln(os.Stdout, rest+": not found")
-				continue
-			}
-			fmt.Fprintln(os.Stdout, rest+" is a shell builtin")
-
-		default:
-			fmt.Fprintln(os.Stdout, input[:len(input)-1]+": command not found")
+		in, err := bufio.NewReader(os.Stdin).ReadString('\n')
+		if err != nil {
+			fmt.Printf("error reading from stdin: %s", err.Error())
+			os.Exit(1)
+		}
+		inputs := strings.Split(strings.TrimSpace(in), " ")
+		cmd := inputs[0]
+		args := inputs[1:]
+		cmdFn, ok := commands[cmd]
+		if !ok {
+			notFound(cmd)
+		} else {
+			cmdFn(args)
 		}
 	}
+}
+
+func registerCommand(cmd string, fn cmdFnc) {
+	commands[cmd] = fn
+}
+
+func initCommands() {
+	registerCommand("exit", exit)
+	registerCommand("echo", echo)
+	registerCommand("type", typer)
+}
+
+func notFound(cmd string) {
+	fmt.Printf("%s: command not found\n", cmd)
+}
+func exit(args []string) {
+	if len(args) == 0 {
+		os.Exit(1)
+	}
+	if code, err := strconv.Atoi(args[0]); err == nil {
+		os.Exit(code)
+	}
+}
+func echo(args []string) {
+	fmt.Println(strings.Join(args, " "))
+}
+
+func typer(args []string) {
+	if len(args) == 0 {
+		fmt.Println("")
+		return
+	}
+	_, builtin := commands[args[0]]
+	if builtin {
+		fmt.Printf("%s is a shell builtin\n", args[0])
+		return
+	}
+	paths := strings.Split(os.Getenv("PATH"), ":")
+	for _, path := range paths {
+		fp := filepath.Join(path, args[0])
+		if _, err := os.Stat(fp); err == nil {
+			fmt.Println(fp)
+			return
+		}
+	}
+	fmt.Printf("%s not found\n", args[0])
 }
