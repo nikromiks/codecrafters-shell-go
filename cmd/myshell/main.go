@@ -80,5 +80,5 @@ func typer(args []string) {
 			return
 		}
 	}
-	fmt.Printf("%s not found\n", args[0])
+	fmt.Printf("%s: not found\n", args[0])
 }
