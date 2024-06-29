@@ -3,7 +3,6 @@ package main
 import (
 	"bufio"
 	"fmt"
-	"log"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -51,15 +50,14 @@ func main() {
 	}
 }
 
-func registerCommand(cmd string, fn cmdFnc) {
-	commands[cmd] = fn
-}
-
 func initCommands() {
-	registerCommand("exit", exit)
-	registerCommand("echo", echo)
-	registerCommand("type", typer)
-	registerCommand("pwd", pwd)
+	commands = map[string]cmdFnc{
+		"exit": exit,
+		"echo": echo,
+		"type": typer,
+		"pwd":  pwd,
+		"cd":   cd,
+	}
 }
 
 func notFound(cmd string) {
@@ -97,9 +95,21 @@ func typer(args []string) {
 func pwd(args []string) {
 	path, err := os.Getwd()
 	if err != nil {
-		log.Println(err)
+		fmt.Println(err)
 	}
 	fmt.Println(path)
+}
+
+func cd(args []string) {
+	if len(args) == 0 {
+		fmt.Println("no path specified")
+		return
+	}
+	dir := args[0]
+	err := os.Chdir(dir)
+	if err != nil {
+		fmt.Println("cd: " + dir + ": No such file or directory")
+	}
 }
 
 func getCommand(args []string) (string, []string, bool) {
