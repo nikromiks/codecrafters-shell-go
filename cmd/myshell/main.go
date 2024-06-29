@@ -106,6 +106,10 @@ func cd(args []string) {
 		return
 	}
 	dir := args[0]
+	if strings.TrimSpace(dir) == "~" {
+		dir = os.Getenv("HOME")
+	}
+
 	err := os.Chdir(dir)
 	if err != nil {
 		fmt.Println("cd: " + dir + ": No such file or directory")
